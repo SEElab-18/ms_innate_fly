@@ -1,0 +1,19 @@
+variable,typ,description
+fly_number,int,each individual fly was given an number in order of trials
+fly_species,chr,"study species either M. domestica, C. stygia, E. tenax"
+fly_sex,chr,sex of individual fly
+cage_number,int,insect cage where experiment took place
+first_visit,chr,colour of flower first visited
+second_visit,chr,colour of flower second visited
+third_visit,chr,colour of flower third visited
+landing_time_1,int,time taken for flies to land (minutes)
+landing_duration_1,int,duration of the first visit
+feeding_observed_1,chr,Y or N input whether feeding was observed at any point in the first visit
+landing_time_2,int,time taken for flies to make a second choice (minutes)
+landing_duration_2,int,duration of the second visit
+feeding_observed_2,chr,Y or N input whether feeding was observed at any point in the first visit
+landing_time_3,int,time taken for flies to make a third choice (minutes)
+landing_duration_3,int,duration of the third visit
+feeding_observed_3,chr,Y or N input whether feeding was observed at any point in the third visit
+date,chr,date of experimental trial
+experience,chr,"fly experience, either naive if fly had not been exposed to experiment or experienced if the fly was exposed but did not make a decision"
