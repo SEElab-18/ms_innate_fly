@@ -9,8 +9,14 @@ library(glmmTMB)
 library(DHARMa)
 
 # Load data
-data_colour_preference_stats <- read.csv("../data/colour_preference_rawdata.csv")
-specs <- getspec("../data/spectra", ext = 'jaz')
+data_colour_preference_stats <- read.csv("../02_data/colour_preference_rawdata.csv")
+specs <- getspec("../02_data/spectra", ext = 'jaz')
+
+# Count non-choices per species
+  data_colour_preference_stats |> 
+  filter(is.na(first_visit)) |> 
+  group_by(fly_species) |> 
+  summarise(non_choices = n())
 
 # Filter non-choices
 data_filtered <- 
@@ -70,6 +76,11 @@ model_c_stygia <- glmmTMB(
   family = binomial
 )
 
+# LRTs via drop1() for each species model
+lr_e_tenax     <- drop1(model_e_tenax,     test = "Chisq")
+lr_m_domestica <- drop1(model_m_domestica, test = "Chisq")
+lr_c_stygia    <- drop1(model_c_stygia,    test = "Chisq")
+
 # Summarise models
 summary(model_e_tenax)
 r2(model_e_tenax)
@@ -111,20 +122,22 @@ chisq_m_domestica_sex <- do_chisq_test(data_filtered, "M. domestica", TRUE)
 chisq_c_stygia <- do_chisq_test(data_filtered, "C. stygia")
 chisq_c_stygia_sex <- do_chisq_test(data_filtered, "C. stygia", TRUE)
 
-#### ANOVAS ####
+#### LATENCY AND DURATION ####
 
 # Function to Convert Time Format to Minutes
 convert_to_minutes <- function(time_col) {
   as.numeric(sub("\\..*", "", time_col)) + (as.numeric(sub(".*\\.", "", time_col)) / 60)
 }
 
-# Landing Time ANOVA
-data_landing_time <- data_filtered %>%
-  mutate(landing_time_1_min = convert_to_minutes(landing_time_1))
-
-anova_landing_time <- aov(landing_time_1_min ~ fly_species * first_visit, data = data_landing_time)
-summary(anova_landing_time)
-check_model(anova_landing_time)
+# Landing Time
+model_latency <- glmmTMB(
+  landing_time_1_min ~ fly_species * first_visit + (1 | fly_number),
+  data = data_landing_time,
+  family = Gamma(link = "log")
+)
+summary(model_latency)
+car::Anova(model_latency, type = 2)  # Wald χ² tests
+simulateResiduals(model_latency, plot = TRUE)
 
 # Summary Statistics for Landing Time
 summary_landing_time <- data_landing_time %>%
@@ -138,13 +151,18 @@ summary_landing_time <- data_landing_time %>%
 
 print(summary_landing_time)
 
-# Duration of Visit ANOVA
+# Duration of Visit
 data_landing_duration <- data_filtered %>%
   mutate(landing_duration_1_min = convert_to_minutes(landing_duration_1))
 
-anova_landing_duration <- aov(landing_duration_1_min ~ fly_species * first_visit, data = data_landing_duration)
-summary(anova_landing_duration)
-check_model(anova_landing_duration)
+model_duration <- glmmTMB(
+  landing_duration_1_min ~ fly_species * first_visit + (1 | fly_number),
+  data = data_landing_duration,
+  family = Gamma(link = "log")
+)
+summary(model_duration)
+car::Anova(model_duration, type = 2)  # Wald χ² tests
+simulateResiduals(model_duration, plot = TRUE)
 
 # Summary Statistics for Duration
 summary_landing_duration <- 
